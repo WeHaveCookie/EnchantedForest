@@ -1,0 +1,18 @@
+{
+	"Name" : "Wind",
+	"Width" : 32,
+	"Height" : 32,
+	"Speed" : 1.0,
+	"Position" : [0.0, 0.0],
+	"State" : "IDLE_RIGHT",	
+	"Movable" : false,
+	"BackgroundLevel" : 0,
+	"Animations" : [
+		{
+			"State" : "IDLE_RIGHT",
+			"Frame" : 30,
+			"Line" : 1,
+			"Time" : 0.1
+		}
+	]
+}

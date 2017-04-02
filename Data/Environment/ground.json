@@ -1,0 +1,19 @@
+{
+	"Name" : "Ground",
+	"Width" : 32,
+	"Height" : 32,
+	"Speed" : 1.0,
+	"Scale" : [3.0, 3.0],
+	"Position" : [0.0, 0.0],
+	"State" : "IDLE",	
+	"Movable" : false,
+	"BackgroundLevel" : 0,
+	"Animations" : [
+		{
+			"State" : "IDLE",
+			"Frame" : 1,
+			"Line" : 1,
+			"Time" : 0.1
+		}
+	]
+}

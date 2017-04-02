@@ -1,0 +1,46 @@
+{
+	"Name" : "PlayerMan",
+	"Brain" : true,
+	"Width" : 32,
+	"Height" : 48,
+	"Speed" : 1.0,
+	"Scale" : [3.0, 3.0],
+	"Position" : [235.0, 235.0],
+	"BackgroundLevel" : 50,
+	"State" : "IDLE",	
+	"Animated" : true,
+	"Movable" : true,
+	"Type" : "Movable",
+	"Animations" : [
+		{
+			"State" : "IDLE",
+			"Frame" : 1,
+			"Line" : 1,
+			"Time" : 0.1
+		},
+		{
+			"State" : "DOWN",
+			"Frame" : 4,
+			"Line" : 1,
+			"Time" : 0.1
+		},
+		{
+			"State" : "LEFT",
+			"Frame" : 4,
+			"Line" : 2,
+			"Time" : 0.1
+		},
+		{
+			"State" : "RIGHT",
+			"Frame" : 4,
+			"Line" : 3,
+			"Time" : 0.1
+		},
+		{
+			"State" : "UP",
+			"Frame" : 4,
+			"Line" : 4,
+			"Time" : 0.1
+		}
+	]
+}

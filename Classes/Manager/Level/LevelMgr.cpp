@@ -167,3 +167,8 @@ void LevelMgr::generateGrid(int size)
 {
 	m_level->generateGrid(size);
 }
+
+void LevelMgr::clearGrid()
+{
+	m_level->clearGrid();
+}

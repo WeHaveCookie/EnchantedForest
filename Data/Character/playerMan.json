@@ -5,7 +5,7 @@
 	"Height" : 48,
 	"Speed" : 1.0,
 	"Scale" : [3.0, 3.0],
-	"Position" : [235.0, 235.0],
+	"Position" : [100.0, 52.0],
 	"BackgroundLevel" : 50,
 	"State" : "IDLE",	
 	"Animated" : true,

@@ -36,25 +36,25 @@ void EntityMgr::init()
 void EntityMgr::process(const float dt)
 {
 	sf::Clock clock;
-	auto entitys = m_entitys->getUsedEntitysSortedHTL();
-	for (auto& entity : entitys)
-	{
-		auto mouseCurrentPosition = InputMgr::getSingleton()->getMousePosition();
-		if (entity->getLastGlobalBounds().contains(mouseCurrentPosition.sf()) && InputMgr::getSingleton()->keyIsJustPressed(KeyType::mouseLeft))
-		{
-			entity->showInfo();
-		}
-		if (entity->getLastGlobalBounds().contains(mouseCurrentPosition.sf()) && InputMgr::getSingleton()->keyIsJustPressed(KeyType::mouseWheelButton))
-		{
-			if(m_onEdition && !entity->isEdition())
-			{
-				continue;
-			}
-			entity->edition();
-			m_onEdition = entity->isEdition();
-			break;
-		}
-	}
+	//auto entitys = m_entitys->getUsedEntitysSortedHTL();
+// 	for (auto& entity : entitys)
+// 	{
+// 		auto mouseCurrentPosition = InputMgr::getSingleton()->getMousePosition();
+// 		if (entity->getLastGlobalBounds().contains(mouseCurrentPosition.sf()) && InputMgr::getSingleton()->keyIsJustPressed(KeyType::mouseLeft))
+// 		{
+// 			entity->showInfo();
+// 		}
+// 		if (entity->getLastGlobalBounds().contains(mouseCurrentPosition.sf()) && InputMgr::getSingleton()->keyIsJustPressed(KeyType::mouseWheelButton))
+// 		{
+// 			if(m_onEdition && !entity->isEdition())
+// 			{
+// 				continue;
+// 			}
+// 			entity->edition();
+// 			m_onEdition = entity->isEdition();
+// 			break;
+// 		}
+// 	}
 	m_entitys->process(dt);
 	m_processTime = clock.getElapsedTime();
 }
@@ -92,7 +92,7 @@ void EntityMgr::showImGuiWindow(bool* window)
 				entity->showInfo();
 			}
 		}
-		ImGui::Text("Used entitys : %i", getNumberUsedEntity());
+		ImGui::Text("Used entitys : %i / %i", getNumberUsedEntity(), m_entitys->getPoolSize());
 
 		std::vector<std::wstring> files;
 		FileMgr::GetFilesInDirectory(files, L"Data/Character", L".json");
@@ -270,5 +270,17 @@ void EntityMgr::moveEntity(MoveDirection::Enum dir, Entity* ent)
 	}
 	default:
 		break;
+	}
+}
+
+void EntityMgr::deleteCase()
+{
+	for (auto& entity : m_entitys->getUsedEntitys())
+	{
+		if (entity->getCaseHandler() != nullptr)
+		{
+			entity->getCaseHandler()->releaseAll();
+			deleteEntity(entity->getUID());
+		}
 	}
 }

@@ -7,13 +7,14 @@
 	"State" : "IDLE_RIGHT",	
 	"Movable" : false,
 	"Animated" : true,
-	"BackgroundLevel" : 0,
+	"BackgroundLevel" : 1,
+	"Element" : "Monster",
 	"Animations" : [
 		{
 			"State" : "IDLE_RIGHT",
 			"Frame" : 5,
 			"Line" : 1,
-			"Time" : 0.1
+			"Time" : 0.4
 		}
 	]
 }

@@ -48,6 +48,8 @@ class EntityMgr : public Manager
 		void displayEntitysInfos();
 		void moveEntity(MoveDirection::Enum dir, Entity* ent);
 
+		void deleteCase();
+
 	private:
 		static EntityMgr*		s_singleton;
 		EntityPool*				m_entitys;

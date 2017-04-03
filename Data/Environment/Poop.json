@@ -7,13 +7,14 @@
 	"State" : "IDLE_RIGHT",	
 	"Movable" : false,
 	"Animated" : true,
-	"BackgroundLevel" : 0,
+	"BackgroundLevel" : 1,
+	"Element" : "Poop",
 	"Animations" : [
 		{
 			"State" : "IDLE_RIGHT",
 			"Frame" : 4,
 			"Line" : 1,
-			"Time" : 0.1
+			"Time" : 0.4
 		}
 	]
 }

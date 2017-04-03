@@ -106,6 +106,11 @@ void GameMgr::showImGuiWindow(bool* window)
 		{
 			LevelMgr::getSingleton()->generateGrid(sizeMap);
 		}
+		ImGui::SameLine();
+		if (ImGui::Button("Delete"))
+		{
+			LevelMgr::getSingleton()->clearGrid();
+		}
 	}
 	ImGui::End();
 }

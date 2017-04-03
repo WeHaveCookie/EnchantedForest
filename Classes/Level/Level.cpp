@@ -18,6 +18,92 @@ void Background::paint()
 	rdrWin->draw(m_sprite);
 }
 
+void CaseHandler::release()
+{
+	if (vanity != nullptr)
+	{
+		EntityMgr::getSingleton()->deleteEntity(vanity->getUID());
+		vanity = nullptr;
+	}
+}
+
+void CaseHandler::releaseAll()
+{
+	release();
+	releaseEffect();
+}
+
+void CaseHandler::releaseEffect()
+{
+	if (entities.size() > 0)
+	{
+		for (auto& entity : entities)
+		{
+			EntityMgr::getSingleton()->deleteEntity(entity->getUID());
+		}
+	}
+	entities.clear();
+}
+
+bool CaseHandler::addObstacle(const char* path)
+{
+	if (vanity != nullptr && vanity->getElement() == EntityElement::Portal)
+	{
+		return false;
+	}
+	release();
+	releaseEffect();
+	auto ent = EntityMgr::getSingleton()->createEntity(path);
+	ent->setPosition(currentPos);
+	ent->setScale(currentScale);
+	vanity = ent;
+	return true;
+}
+
+void CaseHandler::addEffects(const char* path)
+{
+	if (vanity != nullptr && (vanity->getElement() == EntityElement::Monster || vanity->getElement() == EntityElement::Rift || vanity->getElement() == EntityElement::Portal))
+	{
+		return;
+	}
+	release();
+	Entity* ent = EntityMgr::getSingleton()->createEntity(path);
+	
+	if (entities.size() < 1)
+	{
+		ent->setPosition(currentPos);
+		ent->setScale(currentScale);
+	}
+	else
+	{
+		if (ent->getUID() == entities[0]->getUID())
+		{
+			return;
+		}
+		Vector2 newScale = Vector2(currentScale.x / 2 , currentScale.y / 2);
+		entities[0]->setScale(newScale);
+		ent->setScale(newScale);
+		
+		Vector2 newPos;
+		if (entities.size() == 1)
+		{
+			newPos = Vector2(currentPos.x + entities[0]->getGlobalBounds().width, currentPos.y);
+		}
+		else if (entities.size() == 2)
+		{
+			newPos = Vector2(currentPos.x, currentPos.y + entities[0]->getGlobalBounds().height);
+		}
+		else
+		{
+			newPos = Vector2(currentPos.x + entities[0]->getGlobalBounds().width, currentPos.y + entities[0]->getGlobalBounds().height);
+		}
+		
+		ent->setPosition(newPos);
+		
+	}
+	entities.push_back(ent);
+}
+
 Level::Level()
 {
 }
@@ -273,22 +359,80 @@ Entity* createVanity()
 
 void Level::clearGrid()
 {
-	for (auto line : m_grid)
+	EntityMgr::getSingleton()->deleteCase();
+	m_grid.clear();
+}
+
+void Level::generateObstacle()
+{
+	Vector2 scale;
+	std::string pathObstacle, pathEffect;
+
+	int portalLine, portalColumn;
+	do 
 	{
-		for (auto cHandle : line)
+		portalLine = randIntBorned(0, m_Gridsize);
+		portalColumn = randIntBorned(0, m_Gridsize);
+	} while (portalLine == 0 && portalColumn == 0);
+
+	m_grid[portalLine][portalColumn]->addObstacle("Data/Environment/Portal.json");
+
+	for (int line = 0; line < m_Gridsize; line++)
+	{
+		for (int column = 0; column < m_Gridsize; column++)
 		{
-			EntityMgr::getSingleton()->deleteEntity(cHandle->vanity->getUID());
+			if (line == 0 && column == 0)
+			{
+				continue;
+			}
+			if (randIntBorned(0, 100) < 20)
+			{
+				
+				if (randIntBorned(0, 100) < 50)
+				{
+					pathObstacle = "Data/Environment/Monster.json";
+					pathEffect = "Data/Environment/Poop.json";
+				}
+				else
+				{
+					pathObstacle = "Data/Environment/Rift.json";
+					pathEffect = "Data/Environment/Wind.json";
+				}
+				
+				if (!m_grid[line][column]->addObstacle(pathObstacle.c_str()))
+				{
+					continue;
+				}
+				
+				if (line - 1 >= 0)
+				{
+					m_grid[line - 1][column]->addEffects(pathEffect.c_str());
+				}
+				if (line + 1 < m_Gridsize)
+				{
+					m_grid[line + 1][column]->addEffects(pathEffect.c_str());
+				}
+				if (column - 1 >= 0)
+				{
+					m_grid[line][column - 1]->addEffects(pathEffect.c_str());
+				}
+				if (column + 1 < m_Gridsize)
+				{
+					m_grid[line][column + 1]->addEffects(pathEffect.c_str());
+				}
+			}
 		}
 	}
-	m_grid.clear();
 }
 
 void Level::generateGrid(int size)
 {
 	clearGrid();
-	m_grid.clear();
+
+	
 	m_Gridsize = size;
 	int counter = 0;
+	Vector2 scale;
 	for (int lineID = 0; lineID < m_Gridsize; lineID++)
 	{
 		std::vector<CaseHandler*> line;
@@ -296,11 +440,19 @@ void Level::generateGrid(int size)
 		{
 			auto back = createGround(lineID, column);
 			auto vanity = createVanity();
-			auto scale = back->getScale();
+			scale = back->getScale();
+			if (size > 10)
+			{
+				float factor = size / 10.0f;
+				scale /= factor;
+				back->setScale(scale);
+				vanity->setScale(scale);
+			}
 			back->setPosition(Vector2(m_caseSize.x * lineID * scale.x + m_position.x, m_caseSize.y * column * scale.y + m_position.y));
 			vanity->setPosition(back->getPosition());
 			CaseHandler* cHandler = new CaseHandler();
 			cHandler->currentPos = back->getPosition();
+			cHandler->currentScale = scale;
 			cHandler->index = counter++;
 			cHandler->vanity = vanity;
 			line.push_back(cHandler);
@@ -308,4 +460,15 @@ void Level::generateGrid(int size)
 		}
 		m_grid.push_back(line);
 	}
+
+	auto mainChar = GameMgr::getSingleton()->getEntityPlayer();
+	mainChar->setScale(scale);
+	if (size > 10)
+	{
+		auto newPos = Vector2(m_position.x, m_position.y - mainChar->getGlobalBounds().height / 3.0f);
+		mainChar->setPosition(newPos);
+		mainChar->setTargetPos(newPos);
+	}
+
+	generateObstacle();
 }

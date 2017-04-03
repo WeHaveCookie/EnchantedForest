@@ -59,7 +59,8 @@ std::map<std::string, EntityElement::Enum> stringToEntityElement =
 	{ "Monster", EntityElement::Monster},
 	{ "Poop", EntityElement::Poop },
 	{ "Rift", EntityElement::Rift },
-	{ "Wind", EntityElement::Wind }
+	{ "Wind", EntityElement::Wind },
+	{ "Portal", EntityElement::Portal }
 };
 
 std::vector<const char*> entityTypeToString =
@@ -74,7 +75,8 @@ std::vector<const char*> EntityElementToString =
 	"Monster",
 	"Poop",
 	"Rift",
-	"Wind"
+	"Wind",
+	"Portal"
 };
 
 std::map<std::string, EntityAnimationState::Enum> stringToEntityAnimationState =
@@ -259,6 +261,7 @@ void Entity::update(const float dt)
 	}
 	sf::Sprite* currentAnim = m_state.m_live.m_animations[m_state.m_live.m_currentState].getCurrentAnimation();
 	currentAnim->setPosition(m_state.m_live.m_currentPosition.sf());
+	currentAnim->setScale(m_state.m_live.m_scale.sf());
 	currentAnim->setRotation(m_state.m_live.m_angle);
 }
 
@@ -279,6 +282,11 @@ void Entity::addAnimation(EntityAnimationState::Enum entAnimState, EntityAnimati
 void Entity::setSpeed(float speed)
 {
 	m_state.m_live.m_speed = std::max(speed, 0.0f);
+}
+
+void Entity::setState(std::string state)
+{
+	setState(stringToEntityAnimationState[state]);
 }
 
 void Entity::setState(EntityAnimationState::Enum state)
@@ -971,11 +979,10 @@ void Entity::showImGuiWindow()
 				ImGui::Separator();
 				for (auto& ent : m_state.m_live.m_caseHandler->entities)
 				{
-					auto entPtr = EntityMgr::getSingleton()->getEntity(ent);
-					ImGui::Text("%i - %s", ent, entPtr->getName());
+					ImGui::Text("%i - %s", ent->getUID(), ent->getName());
 					if (ImGui::IsItemClicked())
 					{
-						entPtr->showInfo();
+						ent->showInfo();
 					}
 				}
 			}

@@ -130,6 +130,7 @@ LoadingTask::~LoadingTask()
 
 void LoadingTask::init(Entity* ent, const char* path, bool persistent)
 {
+	m_state.m_next = nullptr;
 	m_state.m_live.m_ent = ent;
 	m_state.m_live.m_path = path;
 	m_state.m_live.m_submit = false;
@@ -222,6 +223,7 @@ void LoadingTaskPool::load(Entity* ent, const char* path)
 	newTask->init(ent, path, m_taskPersistent);
 	newTask->submit();
 	newTask->wait();
+	release(newTask);
 }
 
 void LoadingTaskPool::loadAsync(Entity* ent, const char* path)
@@ -242,7 +244,7 @@ void LoadingTaskPool::process()
 {
 	for (auto& task : m_tasks)
 	{
-		if (task->isFinished() && !task->isPersistent())
+		if (task->isFinished() && !task->isPersistent() && task->isUsed())
 		{
 			release(task);
 		}

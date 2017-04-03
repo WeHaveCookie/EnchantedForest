@@ -12,9 +12,10 @@ struct Background {
 
 struct CaseHandler
 {
-	std::vector<uint32_t> entities;
+	std::vector<Entity*> entities;
 	std::vector<uint32_t> entitiesID;
 	Vector2		currentPos;
+	Vector2		currentScale;
 	Entity*		background;
 	Entity*		vanity;
 	int			index; 
@@ -22,9 +23,15 @@ struct CaseHandler
 	CaseHandler()
 	{
 		currentPos = Vector2();
+		currentScale = Vector2();
 		background = nullptr;
 	}
 
+	void release();
+	void releaseAll();
+	void releaseEffect();
+	bool addObstacle(const char* path);
+	void addEffects(const char* path);
 };
 
 class Level
@@ -51,10 +58,12 @@ public:
 	const sf::Vector2f getSizeLevel() const { return sf::Vector2f(m_size.x * m_caseSize.x, m_size.y * m_caseSize.y); }
 	
 	void generateGrid(int size);
+	void clearGrid();
 
 private:
 	Entity* createGround(int line, int column);
-	void clearGrid();
+	void generateObstacle();
+	
 	std::string					m_path;
 	std::string					m_name;
 	sf::Vector2f				m_size;

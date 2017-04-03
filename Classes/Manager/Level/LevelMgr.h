@@ -48,6 +48,7 @@ class LevelMgr : public Manager
 		const std::vector<std::vector<CaseHandler>> getCacheGrid() const { return m_level->getCacheGrid(); }
 
 		void generateGrid(int size);
+		void clearGrid();
 
     protected:
     private:

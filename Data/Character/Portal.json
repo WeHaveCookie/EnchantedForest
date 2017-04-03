@@ -1,0 +1,34 @@
+{
+	"Name" : "Portal",
+	"Width" : 32,
+	"Height" : 32,
+	"Speed" : 1.0,
+	"Position" : [0.0, 0.0],
+	"State" : "LEFT",	
+	"Movable" : false,
+	"Animated" : true,
+	"BackgroundLevel" : 1,
+	"Element" : "Portal",
+	"Animations" : [
+		{
+			"State" : "LEFT",
+			"Frame" : 8,
+			"Line" : 1,
+			"Time" : 0.4,
+			"Commands" : [
+				{
+					"Command" : "ChangeAnimState",
+					"Path" : "IDLE_RIGHT",
+					"StartFrame" : 8,
+					"EndFrame" : 8
+				}
+			]
+		},
+		{
+			"State" : "IDLE_RIGHT",
+			"Frame" : 4,
+			"Line" : 2,
+			"Time" : 0.4
+		}
+	]
+}

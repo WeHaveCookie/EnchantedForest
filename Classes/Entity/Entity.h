@@ -64,7 +64,8 @@ namespace EntityElement
 		Monster,
 		Poop,
 		Rift,
-		Wind
+		Wind,
+		Portal
 	};
 }
 
@@ -224,6 +225,7 @@ class Entity
 		void setAngle(float rad) { m_state.m_live.m_angle = rad * RADTODEG; }
 		const float getAngle() const { return m_state.m_live.m_angle * DEGTORAD; }
 		void setState(EntityAnimationState::Enum state);
+		void setState(std::string state);
 		const EntityAnimation* getAnimation(EntityAnimationState::Enum state);
 		void setNext(Entity* ent) { m_state.m_next = ent; }
 		Entity* getNext() const { return m_state.m_next; }
@@ -302,6 +304,7 @@ class Entity
 		Brain* getBrain() const { return m_state.m_live.m_brain; }
 		void setTextureRect(sf::IntRect textRec);
 		const Vector2 getScale() const { return m_state.m_live.m_scale; }
+		void setScale(Vector2 scale) { m_state.m_live.m_scale = scale; }
 
 	protected:
 		static uint32_t		newUID;

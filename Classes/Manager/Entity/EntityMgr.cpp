@@ -230,7 +230,7 @@ void EntityMgr::moveEntity(MoveDirection::Enum dir, Entity* ent)
 	{
 	case MoveDirection::Left:
 	{
-		auto x = ent->getPosition().x - levelMgr->getSizeCase().x;
+		auto x = ent->getPosition().x - (levelMgr->getSizeCase().x * ent->getScale().x);
 		if (x >= levelMgr->getPositionLevel().x)
 		{
 			ent->setTargetPos(Vector2(x, ent->getPosition().y));
@@ -240,8 +240,8 @@ void EntityMgr::moveEntity(MoveDirection::Enum dir, Entity* ent)
 	}
 	case MoveDirection::Right:
 	{
-		auto x = ent->getPosition().x + levelMgr->getSizeCase().x;
-		if (x < levelMgr->getPositionLevel().x + levelMgr->getSizeLevel().x)
+		auto x = ent->getPosition().x + (levelMgr->getSizeCase().x * ent->getScale().x);
+		if (x < levelMgr->getPositionLevel().x + levelMgr->getSizeLevel().x * ent->getScale().x)
 		{
 			ent->setTargetPos(Vector2(x, ent->getPosition().y));
 			ent->setState(EntityAnimationState::Right);
@@ -250,8 +250,8 @@ void EntityMgr::moveEntity(MoveDirection::Enum dir, Entity* ent)
 	}
 	case MoveDirection::Up:
 	{
-		auto y = ent->getPosition().y - levelMgr->getSizeCase().y;
-		if (y >= levelMgr->getPositionLevel().y)
+		auto y = ent->getPosition().y - (levelMgr->getSizeCase().y * ent->getScale().y);
+		if (y >= levelMgr->getPositionLevel().y - (ent->getGlobalBounds().height / ent->getScale().y))
 		{
 			ent->setTargetPos(Vector2(ent->getPosition().x, y));
 			ent->setState(EntityAnimationState::Up);
@@ -260,8 +260,8 @@ void EntityMgr::moveEntity(MoveDirection::Enum dir, Entity* ent)
 	}
 	case MoveDirection::Down:
 	{
-		auto y = ent->getPosition().y + levelMgr->getSizeCase().y;
-		if (y < levelMgr->getPositionLevel().y + levelMgr->getSizeLevel().y)
+		auto y = ent->getPosition().y + (levelMgr->getSizeCase().y * ent->getScale().y);
+		if (y < levelMgr->getPositionLevel().y * ent->getScale().y + levelMgr->getSizeLevel().y)
 		{
 			ent->setTargetPos(Vector2(ent->getPosition().x, y));
 			ent->setState(EntityAnimationState::Down);

@@ -139,8 +139,9 @@ CaseHandler* Brain::getLowestRiskCase()
 	{
 		if (!isMonster(cHandler) && !isRift(cHandler))
 		{
+			auto ans = cHandler;
 			m_border.erase(it);
-			return cHandler;
+			return ans;
 		}
 		it++;
 	}
@@ -165,10 +166,10 @@ void Brain::explore()
 	{
 		m_intents = std::queue<Intention::Enum>();
 		m_debugIntents.clear();
+		m_currentIntent = -1;
 		typedef Graph_SearchAStar<Graph, Heuristic_Enchanted> AStar;
 		auto search = AStar(m_exploSparseGraph, PhysicMgr::getSingleton()->getCase(m_entity)->index, cHandler->index);
 		createIntention(search.GetPathToTarget());
-		executeAction();
 	}
 	else
 	{
@@ -243,7 +244,10 @@ const bool Brain::executeAction()
 {
 
 	if (m_intents.empty()) {
-		m_currentIntent++;
+		if (m_currentIntent <= m_intents.size() + 1)
+		{
+			m_currentIntent++;
+		}
 		return false;
 	}
 	else {
@@ -266,12 +270,16 @@ void Brain::process(const float dt)
 {
 	if (m_debugPause || m_entity->hasTarget())
 	{
-		executeAction();
 		return;
 	}
 
-	updateBorder();
-	explore(); 
+	
+	if (m_intents.empty())
+	{
+		updateBorder();
+		explore();
+	}
+	executeAction();
 }
 
 void Brain::initGraph()

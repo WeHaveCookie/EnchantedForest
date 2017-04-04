@@ -134,6 +134,38 @@ const bool CaseHandler::isExit() const
 	return false;
 }
 
+const bool CaseHandler::isPoop() const
+{
+	if (entities.size() > 0)
+	{
+		for (auto& ent : entities)
+		{
+			if (ent->getElement() == EntityElement::Poop)
+			{
+				return true;
+			}
+		}
+		
+	}
+	return false;
+}
+
+const bool CaseHandler::isWind() const
+{
+	if (entities.size() > 0)
+	{
+		for (auto& ent : entities)
+		{
+			if (ent->getElement() == EntityElement::Wind)
+			{
+				return true;
+			}
+		}
+
+	}
+	return false;
+}
+
 Level::Level()
 {
 }

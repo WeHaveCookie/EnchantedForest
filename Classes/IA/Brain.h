@@ -46,6 +46,12 @@ typedef SparseGraph<Node, GraphEdge> Graph;
 
 class Brain
 {
+	struct CaseTree
+	{
+		float proba;
+		CaseTree*	left;
+		CaseTree*	right;
+	};
 
 public:
 	Brain(Entity* ent);
@@ -60,9 +66,14 @@ public:
 	void initKnowledge(int size);
 	void addInBorder(CaseHandler* cHandler);
 	CaseHandler* getLowestRiskCase();
-
+	const bool isRift(CaseHandler* cHandler) const;
+	const bool isMonster(CaseHandler* cHandler);
+	const bool isPossibleMonster(CaseHandler* cHandler) const;
+	const bool isPossibleRift(CaseHandler* cHandler) const;
+	void buildCaseTree(CaseTree* root);
 	void reset();
 private:
+
 	void initGraph();
 	void clearKnowledge();
 	
@@ -73,6 +84,6 @@ private:
 	bool						m_debugPause;
 	int							m_debugIntentionScore;
 
-	std::queue<CaseHandler*>				m_border;
+	std::vector<CaseHandler*>				m_border;
 	std::vector<std::vector<CaseHandler*>>	m_knowledge;
 };

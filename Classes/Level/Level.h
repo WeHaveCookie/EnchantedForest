@@ -46,6 +46,8 @@ struct CaseHandler
 	const bool removeMonster();
 	const bool deadly() const;
 	const bool isExit() const;
+	const bool isPoop() const;
+	const bool isWind() const;
 };
 
 class Level

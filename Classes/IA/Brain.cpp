@@ -34,22 +34,133 @@ Brain::~Brain()
 {
 }
 
-struct SearchHandler
+const bool Brain::isPossibleRift(CaseHandler* cHandler) const
 {
-	CaseHandler* cHandler;
-	float	probaSafe;
-};
+	int gridSize = LevelMgr::getSingleton()->getGridSize();
+	int line = cHandler->line;
+	int column = cHandler->column;
+	if (line - 1 >= 0)
+	{
+		if (m_knowledge[line - 1][column] != nullptr && m_knowledge[line - 1][column]->isWind())
+		{
+			return true;
+		}
+	}
+	if (line + 1 < gridSize)
+	{
+		if (m_knowledge[line + 1][column] != nullptr && m_knowledge[line + 1][column]->isWind())
+		{
+			return true;
+		}
+	}
+	if (column + 1 < gridSize)
+	{
+		if (m_knowledge[line][column + 1] != nullptr && m_knowledge[line][column + 1]->isWind())
+		{
+			return true;
+		}
+	}
+	if (column - 1 >= 0)
+	{
+		if (m_knowledge[line][column - 1] != nullptr && m_knowledge[line][column - 1]->isWind())
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+const bool Brain::isPossibleMonster(CaseHandler* cHandler) const
+{
+	int gridSize = LevelMgr::getSingleton()->getGridSize();
+	int line = cHandler->line;
+	int column = cHandler->column;
+	if (line - 1 >= 0)
+	{
+		if (m_knowledge[line - 1][column] != nullptr && m_knowledge[line - 1][column]->isPoop())
+		{
+			return true;
+		}
+	}
+	if (line + 1 < gridSize)
+	{
+		if (m_knowledge[line + 1][column] != nullptr && m_knowledge[line + 1][column]->isPoop())
+		{
+			return true;
+		}
+	}
+	if (column + 1 < gridSize)
+	{
+		if (m_knowledge[line][column + 1] != nullptr && m_knowledge[line][column + 1]->isPoop())
+		{
+			return true;
+		}
+	}
+	if (column - 1 >= 0)
+	{
+		if (m_knowledge[line][column - 1] != nullptr && m_knowledge[line][column - 1]->isPoop())
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void Brain::buildCaseTree(CaseTree* root)
+{
+	CaseTree* currentRoot = root;
+	for (auto& cBorder : m_border)
+	{
+		CaseTree* leafL, *leafR;
+
+		if (isPossibleMonster(cBorder))
+		{
+			leafL->proba = 0.2f;
+			leafR->proba = 0.8f;
+			currentRoot->left = leafL;
+			currentRoot->right = leafR;
+			buildCaseTree(currentRoot->left);
+			buildCaseTree(currentRoot->right);
+
+		}
+
+	}
+}
+
+const bool Brain::isMonster(CaseHandler* cHandler)
+{
+	CaseTree* root;
+	root->proba = 1.0f;
+	buildCaseTree(root);
+	
+	return (cHandler->vanity != nullptr && cHandler->vanity->getElement() == EntityElement::Monster);
+}
+
+const bool Brain::isRift(CaseHandler* cHandler) const
+{
+	return (cHandler->vanity != nullptr && cHandler->vanity->getElement() == EntityElement::Rift);
+}
 
 CaseHandler* Brain::getLowestRiskCase()
 {
-	std::vector<SearchHandler> searchList;
+	bool find = false;
+	auto it = m_border.begin();
+	for (auto& cHandler : m_border)
+	{
+		if (!isMonster(cHandler) && !isRift(cHandler))
+		{
+			m_border.erase(it);
+			return cHandler;
+		}
+		it++;
+	}
 	return nullptr;
 }
 
 void Brain::reset()
 {
 	clearKnowledge();
-	m_border = std::queue<CaseHandler*>();
+	m_border.clear();
 	m_exploSparseGraph.Clear();
 }
 
@@ -182,6 +293,6 @@ void Brain::addInBorder(CaseHandler* cHandler)
 {
 	if (m_knowledge[cHandler->line][cHandler->column] == nullptr)
 	{
-		m_border.push(cHandler);
+		m_border.push_back(cHandler);
 	}
 }

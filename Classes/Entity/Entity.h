@@ -65,7 +65,8 @@ namespace EntityElement
 		Poop,
 		Rift,
 		Wind,
-		Portal
+		Portal,
+		Vanity
 	};
 }
 
@@ -305,6 +306,7 @@ class Entity
 		void setTextureRect(sf::IntRect textRec);
 		const Vector2 getScale() const { return m_state.m_live.m_scale; }
 		void setScale(Vector2 scale) { m_state.m_live.m_scale = scale; }
+		void setElement(EntityElement::Enum elem) { m_state.m_live.m_element = elem; }
 
 	protected:
 		static uint32_t		newUID;

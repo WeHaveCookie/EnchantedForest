@@ -123,6 +123,9 @@
     <ClInclude Include="..\..\Classes\Actions\CommandSound.h">
       <Filter>Classes\Actions</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Classes\Actions\CommandThrowStone.h">
+      <Filter>Classes\Actions</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Classes\Entity\Character\Character.h">
       <Filter>Classes\Entity\Character</Filter>
     </ClInclude>
@@ -315,6 +318,9 @@
       <Filter>Classes\Actions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Classes\Actions\CommandSound.cpp">
+      <Filter>Classes\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Classes\Actions\CommandThrowStone.cpp">
       <Filter>Classes\Actions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Classes\Entity\Character\Character.cpp">

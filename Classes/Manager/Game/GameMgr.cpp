@@ -62,8 +62,6 @@ void GameMgr::process(const float dt)
 	Vector2 motion = { 0.0f, 0.0f };
 	static SaveTask save;
 	static std::vector<uint32_t> ids;
-
-	auto ent = entityMgr->getMainCharacter();
 	m_processTime = clock.getElapsedTime();
 }
 

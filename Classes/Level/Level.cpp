@@ -15,7 +15,7 @@
 void Background::paint()
 {
 	auto rdrWin = RenderMgr::getSingleton()->getMainRenderWindow();
-	rdrWin->draw(m_sprite);
+	rdrWin->draw(m_sprite); 
 }
 
 void CaseHandler::release()
@@ -45,7 +45,7 @@ void CaseHandler::releaseEffect()
 	entities.clear();
 }
 
-bool CaseHandler::addObstacle(const char* path)
+const bool CaseHandler::addObstacle(const char* path)
 {
 	if (vanity != nullptr && vanity->getElement() == EntityElement::Portal)
 	{
@@ -102,6 +102,36 @@ void CaseHandler::addEffects(const char* path)
 		
 	}
 	entities.push_back(ent);
+}
+
+const bool CaseHandler::removeMonster()
+{
+	if (vanity != nullptr && vanity->getElement() == EntityElement::Monster)
+	{
+		release();
+		return true;
+	}
+	return false;
+}
+
+const bool CaseHandler::deadly() const
+{
+	if (vanity != nullptr)
+	{
+		auto elem = vanity->getElement();
+		return (elem == EntityElement::Monster || elem == EntityElement::Rift);
+	}
+	return false;
+}
+
+const bool CaseHandler::isExit() const
+{
+	if (vanity != nullptr)
+	{
+		auto elem = vanity->getElement();
+		return (elem == EntityElement::Portal);
+	}
+	return false;
 }
 
 Level::Level()
@@ -221,7 +251,7 @@ bool Level::load(const char* path)
 			}
 		}
 	}
-
+	m_Gridsize = m_size.x;
 	FileMgr::CloseFile(json);
 	return true;
 }
@@ -354,6 +384,7 @@ Entity* createVanity()
 	int column = randIntBorned(0, 7);
 	ent->setTextureRect(sf::IntRect(32 * column, 32 * line, 32, 32));
 	ent->setBackgroundLevel(30);
+	ent->setElement(EntityElement::Vanity);
 	return ent;
 }
 
@@ -428,9 +459,8 @@ void Level::generateObstacle()
 void Level::generateGrid(int size)
 {
 	clearGrid();
-
-	
 	m_Gridsize = size;
+	m_size = sf::Vector2f(m_Gridsize, m_Gridsize);
 	int counter = 0;
 	Vector2 scale;
 	for (int lineID = 0; lineID < m_Gridsize; lineID++)
@@ -455,6 +485,8 @@ void Level::generateGrid(int size)
 			cHandler->currentScale = scale;
 			cHandler->index = counter++;
 			cHandler->vanity = vanity;
+			cHandler->line = lineID;
+			cHandler->column = column;
 			line.push_back(cHandler);
 			back->setCaseHandler(cHandler);
 		}
@@ -463,12 +495,63 @@ void Level::generateGrid(int size)
 
 	auto mainChar = GameMgr::getSingleton()->getEntityPlayer();
 	mainChar->setScale(scale);
-	if (size > 10)
-	{
-		auto newPos = Vector2(m_position.x, m_position.y - mainChar->getGlobalBounds().height / 3.0f);
-		mainChar->setPosition(newPos);
-		mainChar->setTargetPos(newPos);
-	}
+	auto newPos = Vector2(m_position.x, m_position.y - mainChar->getGlobalBounds().height / 3.0f);
+	mainChar->setPosition(newPos);
+	mainChar->setTargetPos(newPos);
+
 
 	generateObstacle();
+}
+
+void Level::throwStone(Entity* entity, LevelOrientation::Enum orientation)
+{
+	auto cHandler = PhysicMgr::getSingleton()->getCase(entity);
+	auto line = cHandler->line;
+	auto column = cHandler->column;
+
+	switch (orientation)
+	{
+	case LevelOrientation::Left:
+		while (line - 1 >= 0)
+		{
+			if (m_grid[line - 1][column]->removeMonster())
+			{
+				break;
+			}
+			line--;
+		}
+		break;
+	case LevelOrientation::Right:
+		while (line + 1 < m_Gridsize)
+		{
+			if (m_grid[line + 1][column]->removeMonster())
+			{
+				break;
+			}
+			line++;
+		}
+		break;
+	case LevelOrientation::Down:
+		while (column + 1 < m_Gridsize)
+		{
+			if (m_grid[line][column + 1]->removeMonster())
+			{
+				break;
+			}
+			column++;
+		}
+		break;
+	case LevelOrientation::Up:
+		while (column - 1 >= 0)
+		{
+			if (m_grid[line][column - 1]->removeMonster())
+			{
+				break;
+			}
+			column--;
+		}
+		break;
+	default:
+		break;
+	}
 }

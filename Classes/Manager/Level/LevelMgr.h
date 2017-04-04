@@ -49,6 +49,8 @@ class LevelMgr : public Manager
 
 		void generateGrid(int size);
 		void clearGrid();
+		void throwStone(Entity* entity, LevelOrientation::Enum orientation);
+		void modifyScore(int value) { m_playerScore += value; }
 
     protected:
     private:
@@ -60,5 +62,6 @@ class LevelMgr : public Manager
 		int					m_queryCount;
 		Level*				m_level;
 		std::list<uint32_t>	m_loadingEnvironment;
+		int					m_playerScore;
 };
 

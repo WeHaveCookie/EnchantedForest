@@ -2,6 +2,15 @@
 
 class Entity;
 
+struct LevelOrientation {
+	enum Enum {
+		Left,
+		Right,
+		Up,
+		Down
+	};
+};
+
 struct Background {
 	sf::Texture	m_texture;
 	sf::Sprite	m_sprite;
@@ -19,6 +28,8 @@ struct CaseHandler
 	Entity*		background;
 	Entity*		vanity;
 	int			index; 
+	int			line;
+	int			column;
 
 	CaseHandler()
 	{
@@ -30,8 +41,11 @@ struct CaseHandler
 	void release();
 	void releaseAll();
 	void releaseEffect();
-	bool addObstacle(const char* path);
+	const bool addObstacle(const char* path);
 	void addEffects(const char* path);
+	const bool removeMonster();
+	const bool deadly() const;
+	const bool isExit() const;
 };
 
 class Level
@@ -59,6 +73,9 @@ public:
 	
 	void generateGrid(int size);
 	void clearGrid();
+
+	void throwStone(Entity* entity, LevelOrientation::Enum orientation);
+	const int getGridSize() const { return m_Gridsize; }
 
 private:
 	Entity* createGround(int line, int column);

@@ -542,12 +542,13 @@ bool PhysicMgr::tryToFall(Entity* ent)
 
 CaseHandler* PhysicMgr::getCase(Entity* ent) const
 {
+	CaseHandler* cHandler = nullptr;
 	for (auto& collider : m_entitys)
 	{
 		if (collider != ent && collider->getElement() == EntityElement::None && CollisionAABBandAABB(collider->getGlobalBounds(), ent->getGlobalBounds()))
 		{
-			return collider->getCaseHandler();
+			cHandler = collider->getCaseHandler();
 		}
 	}
-	return nullptr;
+	return cHandler;
 }

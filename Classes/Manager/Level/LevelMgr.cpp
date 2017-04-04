@@ -8,6 +8,7 @@
 #include "Utils/wcharUtils.h"
 #include "Utils/Random.h"
 #include "Manager/Entity/EntityMgr.h"
+#include "Manager/Physic/PhysicMgr.h"
 
 LevelMgr* LevelMgr::s_singleton = NULL;
 
@@ -32,12 +33,34 @@ void LevelMgr::init()
 	m_level = new Level();
 	loadLevel("Data/Level/level1.json");
 	GameMgr::getSingleton()->setNumberPlayer(1);
+	m_level->generateGrid(m_level->getGridSize());
+	m_playerScore = 0;
 }
 
 void LevelMgr::process(const float dt)
 {
 	sf::Clock clock;
 	m_quadtree->update();
+	auto player = GameMgr::getSingleton()->getEntityPlayer();
+	if (!player->hasTarget())
+	{
+		auto cHandler = PhysicMgr::getSingleton()->getCase(player);
+		if (cHandler != nullptr)
+		{
+			if (cHandler->deadly())
+			{
+				auto levelSize = m_level->getGridSize();
+				m_playerScore -= 10 * levelSize * levelSize;
+				generateGrid(levelSize);
+			}
+			if (cHandler->isExit())
+			{
+				auto levelSize = m_level->getGridSize();
+				m_playerScore += 10 * levelSize * levelSize;
+				generateGrid(levelSize + 1);
+			}
+		}
+	}
 	m_processTime = clock.getElapsedTime();
 }
 
@@ -96,6 +119,30 @@ void LevelMgr::showImGuiWindow(bool* window)
 		{
 			unloadLevel();
 		}
+
+		ImGui::Text("Throw stone ");
+		ImGui::SameLine();
+		if (ImGui::Button("Left"))
+		{
+			throwStone(GameMgr::getSingleton()->getEntityPlayer(), LevelOrientation::Left);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Right"))
+		{
+			throwStone(GameMgr::getSingleton()->getEntityPlayer(), LevelOrientation::Right);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Up"))
+		{
+			throwStone(GameMgr::getSingleton()->getEntityPlayer(), LevelOrientation::Up);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Down"))
+		{
+			throwStone(GameMgr::getSingleton()->getEntityPlayer(), LevelOrientation::Down);
+		}
+
+		ImGui::Text("Player score : %i", m_playerScore);
 
 		for (unsigned int i = 0; i < files.size(); i++)
 		{
@@ -171,4 +218,10 @@ void LevelMgr::generateGrid(int size)
 void LevelMgr::clearGrid()
 {
 	m_level->clearGrid();
+}
+
+void LevelMgr::throwStone(Entity* entity, LevelOrientation::Enum orientation)
+{
+	m_level->throwStone(entity, orientation);
+	modifyScore(-10);
 }

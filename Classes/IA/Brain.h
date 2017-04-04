@@ -51,14 +51,20 @@ public:
 	Brain(Entity* ent);
 	~Brain();
 
-	const bool executeAction();
+	void explore();
+	void updateBorder();
 	void process(const float dt);
 	void showImGuiWindow();
 
 	void showInfo() { m_displayInfo = !m_displayInfo; }
+	void initKnowledge(int size);
+	void addInBorder(CaseHandler* cHandler);
+	CaseHandler* getLowestRiskCase();
 
+	void reset();
 private:
 	void initGraph();
+	void clearKnowledge();
 	
 
 	bool						m_displayInfo;
@@ -67,5 +73,6 @@ private:
 	bool						m_debugPause;
 	int							m_debugIntentionScore;
 
-	std::vector<std::vector<CaseHandler>>	m_knwoledge;
+	std::queue<CaseHandler*>				m_border;
+	std::vector<std::vector<CaseHandler*>>	m_knowledge;
 };

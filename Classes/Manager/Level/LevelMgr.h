@@ -51,6 +51,7 @@ class LevelMgr : public Manager
 		void clearGrid();
 		void throwStone(Entity* entity, LevelOrientation::Enum orientation);
 		void modifyScore(int value) { m_playerScore += value; }
+		const int getGridSize() const { return m_level->getGridSize(); }
 
     protected:
     private:

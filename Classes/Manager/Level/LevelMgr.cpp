@@ -9,6 +9,8 @@
 #include "Utils/Random.h"
 #include "Manager/Entity/EntityMgr.h"
 #include "Manager/Physic/PhysicMgr.h"
+#include "Entity/Entity.h"
+#include "IA/Brain.h"
 
 LevelMgr* LevelMgr::s_singleton = NULL;
 
@@ -33,7 +35,7 @@ void LevelMgr::init()
 	m_level = new Level();
 	loadLevel("Data/Level/level1.json");
 	GameMgr::getSingleton()->setNumberPlayer(1);
-	m_level->generateGrid(m_level->getGridSize());
+	generateGrid(m_level->getGridSize());
 	m_playerScore = 0;
 }
 
@@ -213,6 +215,7 @@ CaseHandler* LevelMgr::getCase(uint32_t id)
 void LevelMgr::generateGrid(int size)
 {
 	m_level->generateGrid(size);
+	GameMgr::getSingleton()->getEntityPlayer()->getBrain()->initKnowledge(size);
 }
 
 void LevelMgr::clearGrid()

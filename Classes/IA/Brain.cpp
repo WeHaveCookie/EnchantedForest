@@ -34,31 +34,83 @@ Brain::~Brain()
 {
 }
 
-const bool Brain::executeAction()
+struct SearchHandler
 {
-	return false;
+	CaseHandler* cHandler;
+	float	probaSafe;
+};
+
+CaseHandler* Brain::getLowestRiskCase()
+{
+	std::vector<SearchHandler> searchList;
+	return nullptr;
+}
+
+void Brain::reset()
+{
+	clearKnowledge();
+	m_border = std::queue<CaseHandler*>();
+	m_exploSparseGraph.Clear();
 }
 
 
+void Brain::explore()
+{
+	auto cHandler = getLowestRiskCase();
+
+}
+
+void Brain::updateBorder()
+{
+	
+	auto currentCHandle = PhysicMgr::getSingleton()->getCase(m_entity);
+	
+	m_knowledge[currentCHandle->line][currentCHandle->column] = currentCHandle;
+	
+	auto grid = LevelMgr::getSingleton()->getGrid();
+	
+	int line = currentCHandle->line;
+	int column = currentCHandle->column;
+	int gridSize = LevelMgr::getSingleton()->getGridSize();
+
+	if (line - 1 >= 0)
+	{
+		addInBorder(grid[line - 1][column]);
+	}
+	if (line + 1 < gridSize)
+	{
+		addInBorder(grid[line + 1][column]);
+	}
+	if (column + 1 < gridSize)
+	{
+		addInBorder(grid[line][column + 1]);
+	}
+	if (column - 1 >= 0)
+	{
+		addInBorder(grid[line][column - 1]);
+	}
+}
+
 void Brain::process(const float dt)
 {
-	if (m_debugPause)
+	if (m_debugPause || m_entity->hasTarget())
 	{
 		return;
 	}
-	executeAction();
+
+	updateBorder();
+	explore(); 
 }
 
 void Brain::initGraph()
 {
-	auto cacheGrid = LevelMgr::getSingleton()->getGrid();
-	
-	for (int i = 0; i < (int)cacheGrid.size(); i++)
+	auto grid = LevelMgr::getSingleton()->getGrid();
+	for (int i = 0; i < (int)grid.size(); i++)
 	{
-		for (int j = 0; j < (int)cacheGrid[i].size(); j++)
+		for (int j = 0; j < (int)grid[i].size(); j++)
 		{
 			Node node;
-			node.caseHandler = cacheGrid[i][j];
+			node.caseHandler = grid[i][j];
 			m_exploSparseGraph.AddNode(node);
 			GraphEdge edge;
 			edge.SetFrom(node.Index());
@@ -66,22 +118,22 @@ void Brain::initGraph()
 			if (i == 0 && j == 0) continue;
 			if (i == 0)
 			{
-				node.caseHandler = cacheGrid[i][j - 1];
+				node.caseHandler = grid[i][j - 1];
 				edge.SetTo(node.Index());
 				m_exploSparseGraph.AddEdge(edge);
 			}
 			else if (j == 0)
 			{
-				node.caseHandler = cacheGrid[i - 1][j];
+				node.caseHandler = grid[i - 1][j];
 				edge.SetTo(node.Index());
 				m_exploSparseGraph.AddEdge(edge);
 			}
 			else
 			{
-				node.caseHandler = cacheGrid[i][j - 1];
+				node.caseHandler = grid[i][j - 1];
 				edge.SetTo(node.Index());
 				m_exploSparseGraph.AddEdge(edge);
-				node.caseHandler = cacheGrid[i - 1][j];
+				node.caseHandler = grid[i - 1][j];
 				edge.SetTo(node.Index());
 				m_exploSparseGraph.AddEdge(edge);
 			}
@@ -99,5 +151,37 @@ void Brain::showImGuiWindow()
 			ImGui::Checkbox("Pause", &m_debugPause);
 		}
 		ImGui::End();
+	}
+}
+
+void Brain::initKnowledge(int size)
+{
+	reset();
+	for (int line = 0; line < size; line++)
+	{
+		std::vector<CaseHandler*> lineHandler;
+		for (int column = 0; column < size; column++)
+		{
+			lineHandler.push_back(nullptr);
+		}
+		m_knowledge.push_back(lineHandler);
+	}
+	initGraph();
+}
+
+void Brain::clearKnowledge()
+{
+	for (auto& line : m_knowledge)
+	{
+		line.clear();
+	}
+	m_knowledge.clear();
+}
+
+void Brain::addInBorder(CaseHandler* cHandler)
+{
+	if (m_knowledge[cHandler->line][cHandler->column] == nullptr)
+	{
+		m_border.push(cHandler);
 	}
 }

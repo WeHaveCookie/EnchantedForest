@@ -80,7 +80,24 @@ public:
 	}
 };
 
+//-----------------------------------------------------------------------------
+//The enchanted heuristic
+//-----------------------------------------------------------------------------
+class Heuristic_Enchanted
+{
+public:
 
+	template <class graph_type>
+	static double Calculate(const graph_type& G, int nd1, int nd2)
+	{
+		int deadly = 0;
+		if (G.GetNode(nd2).Deadly())
+		{
+			deadly += 10000;
+		}
+		return Vector2::Manathan(G.GetNode(nd1).Pos(), G.GetNode(nd2).Pos()) + deadly;
+	}
+};
 
 
 #endif

@@ -23,12 +23,7 @@ class Entity;
 struct Node
 {
 	CaseHandler*	caseHandler;
-	CaseHandler		cacheCase;
 
-	void update()
-	{
-		cacheCase = *caseHandler;
-	}
 
 	int Index()
 	{
@@ -37,21 +32,19 @@ struct Node
 
 	const Vector2 Pos() const
 	{
-		return cacheCase.background->getPosition();
+		return caseHandler->currentPos;
 	}
 
+	const bool Deadly() const 
+	{
+		return caseHandler->deadly();
+	}
 };
 
 typedef SparseGraph<Node, GraphEdge> Graph;
 
 class Brain
 {
-	struct CaseTree
-	{
-		float proba;
-		CaseTree*	left;
-		CaseTree*	right;
-	};
 
 public:
 	Brain(Entity* ent);
@@ -70,8 +63,10 @@ public:
 	const bool isMonster(CaseHandler* cHandler);
 	const bool isPossibleMonster(CaseHandler* cHandler) const;
 	const bool isPossibleRift(CaseHandler* cHandler) const;
-	void buildCaseTree(CaseTree* root);
 	void reset();
+	void createIntention(std::list<int> path);
+	const bool executeAction();
+
 private:
 
 	void initGraph();
@@ -82,7 +77,10 @@ private:
 	Entity*						m_entity;
 	Graph						m_exploSparseGraph;
 	bool						m_debugPause;
-	int							m_debugIntentionScore;
+
+	int							m_currentIntent;
+	std::vector<Intention::Enum> m_debugIntents;
+	std::queue<Intention::Enum>	m_intents;
 
 	std::vector<CaseHandler*>				m_border;
 	std::vector<std::vector<CaseHandler*>>	m_knowledge;

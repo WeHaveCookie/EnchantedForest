@@ -23,11 +23,10 @@ std::vector<const char*> IntentoToCommandName =
 Brain::Brain(Entity* ent)
 	:m_entity(ent),
 	m_exploSparseGraph(false),
-	m_debugPause(false),
+	m_debugPause(true),
 	m_displayInfo(true)
 {
-	m_debugIntentionScore = 0;
-	initGraph();
+	m_currentIntent = 0;
 }
 
 Brain::~Brain()
@@ -106,39 +105,30 @@ const bool Brain::isPossibleMonster(CaseHandler* cHandler) const
 	return false;
 }
 
-void Brain::buildCaseTree(CaseTree* root)
-{
-	CaseTree* currentRoot = root;
-	for (auto& cBorder : m_border)
-	{
-		CaseTree* leafL, *leafR;
-
-		if (isPossibleMonster(cBorder))
-		{
-			leafL->proba = 0.2f;
-			leafR->proba = 0.8f;
-			currentRoot->left = leafL;
-			currentRoot->right = leafR;
-			buildCaseTree(currentRoot->left);
-			buildCaseTree(currentRoot->right);
-
-		}
-
-	}
-}
-
 const bool Brain::isMonster(CaseHandler* cHandler)
 {
-	CaseTree* root;
-	root->proba = 1.0f;
-	buildCaseTree(root);
-	
-	return (cHandler->vanity != nullptr && cHandler->vanity->getElement() == EntityElement::Monster);
+	if (!isPossibleMonster(cHandler))
+	{
+		return false;
+	}
+	else
+	{
+		// Proba isMonster with Border and knowledge
+		return true;
+	}
 }
 
 const bool Brain::isRift(CaseHandler* cHandler) const
 {
-	return (cHandler->vanity != nullptr && cHandler->vanity->getElement() == EntityElement::Rift);
+	if (!isPossibleRift(cHandler))
+	{
+		return false;
+	}
+	else
+	{
+		// Proba isRift with Border and knowledge
+		return true;
+	}
 }
 
 CaseHandler* Brain::getLowestRiskCase()
@@ -162,13 +152,60 @@ void Brain::reset()
 	clearKnowledge();
 	m_border.clear();
 	m_exploSparseGraph.Clear();
+	m_currentIntent = 0;
+	m_debugIntents.clear();
+	m_intents = std::queue<Intention::Enum>();
 }
 
 
 void Brain::explore()
 {
 	auto cHandler = getLowestRiskCase();
+	if (cHandler != nullptr)
+	{
+		m_intents = std::queue<Intention::Enum>();
+		m_debugIntents.clear();
+		typedef Graph_SearchAStar<Graph, Heuristic_Enchanted> AStar;
+		auto search = AStar(m_exploSparseGraph, PhysicMgr::getSingleton()->getCase(m_entity)->index, cHandler->index);
+		createIntention(search.GetPathToTarget());
+		executeAction();
+	}
+	else
+	{
+		// Search to throw a stone or take risk ! 
+	}
+}
 
+void Brain::createIntention(std::list<int> path)
+{
+	auto currentPos = PhysicMgr::getSingleton()->getCase(m_entity)->currentPos;
+	for (auto& nodeID : path)
+	{
+		auto node = m_exploSparseGraph.GetNode(nodeID);
+		auto casePos = node.Pos();
+
+		if (casePos.x < currentPos.x)
+		{
+			m_intents.push(Intention::MoveLeft);
+			m_debugIntents.push_back(Intention::MoveLeft);
+		}
+		else if (casePos.x > currentPos.x)
+		{
+			m_intents.push(Intention::MoveRight);
+			m_debugIntents.push_back(Intention::MoveRight);
+		}
+		else if (casePos.y < currentPos.y)
+		{
+			m_intents.push(Intention::MoveUp);
+			m_debugIntents.push_back(Intention::MoveUp);
+		}
+		else if (casePos.y > currentPos.y)
+		{
+			m_intents.push(Intention::MoveDown);
+			m_debugIntents.push_back(Intention::MoveDown);
+		}
+		currentPos = casePos;
+	}
 }
 
 void Brain::updateBorder()
@@ -202,10 +239,34 @@ void Brain::updateBorder()
 	}
 }
 
+const bool Brain::executeAction()
+{
+
+	if (m_intents.empty()) {
+		m_currentIntent++;
+		return false;
+	}
+	else {
+		if (m_entity->hasTarget())
+		{
+			return true;
+		}
+		int id;
+		Command* cmd = CommandMgr::getSingleton()->getCommand(IntentoToCommandName[m_intents.front()], &id);
+		cmd->init(m_entity);
+		cmd->setExeType(CommandExeType::AtOnce);
+		CommandMgr::getSingleton()->addCommand(cmd);
+		m_intents.pop();
+		m_currentIntent++;
+		return true;
+	}
+}
+
 void Brain::process(const float dt)
 {
 	if (m_debugPause || m_entity->hasTarget())
 	{
+		executeAction();
 		return;
 	}
 
@@ -260,6 +321,26 @@ void Brain::showImGuiWindow()
 		if (ImGui::Begin(name.c_str(), &m_displayInfo))
 		{
 			ImGui::Checkbox("Pause", &m_debugPause);
+			ImGui::SameLine();
+			ImGui::Text("Intention - nbr : %i", m_intents.size());
+			ImGui::Separator();
+			int counter = 0;
+			for (auto& intention : m_debugIntents)
+			{
+				if (counter < m_currentIntent)
+				{
+					ImGui::TextColored(ImColor(0, 0, 0), IntentoToCommandName[intention]);
+				}
+				else if (counter == m_currentIntent)
+				{
+					ImGui::TextColored(ImColor(128, 255, 0), IntentoToCommandName[intention]);
+				}
+				else
+				{
+					ImGui::TextColored(ImColor(0, 153, 0), IntentoToCommandName[intention]);
+				}
+				counter++;
+			}
 		}
 		ImGui::End();
 	}
@@ -293,6 +374,13 @@ void Brain::addInBorder(CaseHandler* cHandler)
 {
 	if (m_knowledge[cHandler->line][cHandler->column] == nullptr)
 	{
+		for (auto& handler : m_border)
+		{
+			if (handler->index == cHandler->index)
+			{
+				return;
+			}
+		}
 		m_border.push_back(cHandler);
 	}
 }

@@ -30,12 +30,14 @@ struct CaseHandler
 	int			index; 
 	int			line;
 	int			column;
+	bool		stone;
 
 	CaseHandler()
 	{
 		currentPos = Vector2();
 		currentScale = Vector2();
 		background = nullptr;
+		stone = false;
 	}
 
 	void release();
@@ -48,6 +50,7 @@ struct CaseHandler
 	const bool isExit() const;
 	const bool isPoop() const;
 	const bool isWind() const;
+	void throwStone() { stone = true; }
 };
 
 class Level

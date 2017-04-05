@@ -12,9 +12,10 @@ namespace Intention
 		MoveRight,
 		MoveDown,
 		MoveLeft,
-		Clean,
-		PickUp,
-		Explore
+		ThrowRight,
+		ThrowLeft,
+		ThrowUp,
+		ThrowDown
 	};
 }
 
@@ -54,6 +55,7 @@ public:
 	void updateBorder();
 	void process(const float dt);
 	void showImGuiWindow();
+	void start() { m_debugPause = false; }
 
 	void showInfo() { m_displayInfo = !m_displayInfo; }
 	void initKnowledge(int size);
@@ -66,6 +68,9 @@ public:
 	void reset();
 	void createIntention(std::list<int> path);
 	const bool executeAction();
+	CaseHandler* getMonsterCaseInBorder();
+	CaseHandler* getKnowCase(CaseHandler* cHandler);
+	void throwStone(CaseHandler* cKnow, CaseHandler* cMonster);
 
 private:
 

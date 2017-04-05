@@ -15,9 +15,10 @@ std::vector<const char*> IntentoToCommandName =
 	"CommandMoveRight",
 	"CommandMoveDown",
 	"CommandMoveLeft",
-	"CommandClean",
-	"CommandPickUp",
-	"CommandExplore"
+	"CommandThrowStone",
+	"CommandThrowStone",
+	"CommandThrowStone",
+	"CommandThrowStone"
 };
 
 Brain::Brain(Entity* ent)
@@ -74,6 +75,10 @@ const bool Brain::isPossibleMonster(CaseHandler* cHandler) const
 	int gridSize = LevelMgr::getSingleton()->getGridSize();
 	int line = cHandler->line;
 	int column = cHandler->column;
+	if (cHandler->stone)
+	{
+		return false;
+	}
 	if (line - 1 >= 0)
 	{
 		if (m_knowledge[line - 1][column] != nullptr && m_knowledge[line - 1][column]->isPoop())
@@ -134,18 +139,30 @@ const bool Brain::isRift(CaseHandler* cHandler) const
 CaseHandler* Brain::getLowestRiskCase()
 {
 	bool find = false;
+	float distMan = -1;
+	CaseHandler* safeCase = nullptr;
+	std::vector<CaseHandler*>::iterator safeCaseIt;
 	auto it = m_border.begin();
+	auto posPlayer = m_entity->getPosition();
 	for (auto& cHandler : m_border)
 	{
 		if (!isMonster(cHandler) && !isRift(cHandler))
 		{
-			auto ans = cHandler;
-			m_border.erase(it);
-			return ans;
+			auto currentDistMan = Vector2::Manathan(posPlayer, cHandler->currentPos);
+			if (distMan == -1 || distMan > currentDistMan)
+			{
+				distMan = currentDistMan;
+				safeCase = cHandler;
+				safeCaseIt = it;
+			}
 		}
 		it++;
 	}
-	return nullptr;
+	if (safeCase != nullptr)
+	{
+		m_border.erase(safeCaseIt);
+	}
+	return safeCase;
 }
 
 void Brain::reset()
@@ -156,8 +173,85 @@ void Brain::reset()
 	m_currentIntent = 0;
 	m_debugIntents.clear();
 	m_intents = std::queue<Intention::Enum>();
+	m_debugPause = true;
 }
 
+
+CaseHandler* Brain::getMonsterCaseInBorder()
+{
+	auto it = m_border.begin();
+	for (auto& cHandler : m_border)
+	{
+		if (isMonster(cHandler))
+		{
+			auto ans = cHandler;
+			m_border.erase(it);
+			return ans;
+		}
+		it++;
+	}
+	return nullptr;
+}
+
+CaseHandler* Brain::getKnowCase(CaseHandler* cHandler)
+{
+	auto line = cHandler->line;
+	auto column = cHandler->column;
+	int gridSize = LevelMgr::getSingleton()->getGridSize();
+	if (line - 1 >= 0)
+	{
+		if (m_knowledge[line - 1][column] != nullptr)
+		{
+			return m_knowledge[line - 1][column];
+		}
+	}
+	if (line + 1 < gridSize)
+	{
+		if (m_knowledge[line + 1][column] != nullptr)
+		{
+			return m_knowledge[line + 1][column];
+		}
+	}
+	if (column + 1 < gridSize)
+	{
+		if (m_knowledge[line][column + 1] != nullptr)
+		{
+			return m_knowledge[line][column + 1];
+		}
+	}
+	if (column - 1 >= 0)
+	{
+		if (m_knowledge[line][column - 1] != nullptr)
+		{
+			return m_knowledge[line][column - 1];
+		}
+	}
+	return nullptr;
+}
+
+void Brain::throwStone(CaseHandler* cKnow, CaseHandler* cMonster)
+{
+	if (cKnow->currentPos.x < cMonster->currentPos.x)
+	{
+		m_intents.push(Intention::ThrowRight);
+		m_debugIntents.push_back(Intention::ThrowRight);
+	}
+	else if (cKnow->currentPos.x > cMonster->currentPos.x)
+	{
+		m_intents.push(Intention::ThrowLeft);
+		m_debugIntents.push_back(Intention::ThrowLeft);
+	}
+	else if (cKnow->currentPos.y < cMonster->currentPos.y)
+	{
+		m_intents.push(Intention::ThrowDown);
+		m_debugIntents.push_back(Intention::ThrowDown);
+	}
+	else
+	{
+		m_intents.push(Intention::ThrowUp);
+		m_debugIntents.push_back(Intention::ThrowUp);
+	}
+}
 
 void Brain::explore()
 {
@@ -174,6 +268,36 @@ void Brain::explore()
 	else
 	{
 		// Search to throw a stone or take risk ! 
+		auto cMonster = getMonsterCaseInBorder();
+		if (cMonster != nullptr)
+		{
+			// Throw stone
+			auto cKnow = getKnowCase(cMonster);
+			if (cKnow == nullptr)
+			{
+				return;
+			}
+			m_intents = std::queue<Intention::Enum>();
+			m_debugIntents.clear();
+			m_currentIntent = -1;
+			typedef Graph_SearchAStar<Graph, Heuristic_Enchanted> AStar;
+			auto search = AStar(m_exploSparseGraph, PhysicMgr::getSingleton()->getCase(m_entity)->index, cKnow->index);
+			createIntention(search.GetPathToTarget());
+			throwStone(cKnow, cMonster);
+		}
+		else
+		{
+			// Take risk
+			auto cRisk = m_border[0];
+			m_border.erase(m_border.begin());
+			m_intents = std::queue<Intention::Enum>();
+			m_debugIntents.clear();
+			m_currentIntent = -1;
+			typedef Graph_SearchAStar<Graph, Heuristic_Enchanted> AStar;
+			auto search = AStar(m_exploSparseGraph, PhysicMgr::getSingleton()->getCase(m_entity)->index, cRisk->index);
+			createIntention(search.GetPathToTarget());
+		}
+
 	}
 }
 
@@ -257,7 +381,31 @@ const bool Brain::executeAction()
 		}
 		int id;
 		Command* cmd = CommandMgr::getSingleton()->getCommand(IntentoToCommandName[m_intents.front()], &id);
-		cmd->init(m_entity);
+		if (m_intents.front() == Intention::ThrowDown)
+		{
+			auto orient = LevelOrientation::Down;
+			cmd->init(m_entity, (void*)&orient);
+		}
+		else if (m_intents.front() == Intention::ThrowUp)
+		{
+			auto orient = LevelOrientation::Up;
+			cmd->init(m_entity, (void*)&orient);
+		}
+		else if (m_intents.front() == Intention::ThrowRight)
+		{
+			auto orient = LevelOrientation::Right;
+			cmd->init(m_entity, (void*)&orient);
+		}
+		else if (m_intents.front() == Intention::ThrowLeft)
+		{
+			auto orient = LevelOrientation::Left;
+			cmd->init(m_entity, (void*)&orient);
+		}
+		else
+		{
+			cmd->init(m_entity);
+		}
+		
 		cmd->setExeType(CommandExeType::AtOnce);
 		CommandMgr::getSingleton()->addCommand(cmd);
 		m_intents.pop();
@@ -272,7 +420,6 @@ void Brain::process(const float dt)
 	{
 		return;
 	}
-
 	
 	if (m_intents.empty())
 	{
@@ -366,7 +513,9 @@ void Brain::initKnowledge(int size)
 		}
 		m_knowledge.push_back(lineHandler);
 	}
+	m_knowledge[0][0] = LevelMgr::getSingleton()->getGrid()[0][0];
 	initGraph();
+	start();
 }
 
 void Brain::clearKnowledge()

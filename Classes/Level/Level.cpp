@@ -106,6 +106,7 @@ void CaseHandler::addEffects(const char* path)
 
 const bool CaseHandler::removeMonster()
 {
+	throwStone();
 	if (vanity != nullptr && vanity->getElement() == EntityElement::Monster)
 	{
 		release();

@@ -21,7 +21,8 @@ namespace CommandType
 		Sound,
 		LockInput,
 		UnlockInput,
-		ChangeAnimState
+		ChangeAnimState,
+		ThrowStone
 	};
 }
 

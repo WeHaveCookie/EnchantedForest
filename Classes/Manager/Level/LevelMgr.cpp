@@ -11,6 +11,7 @@
 #include "Manager/Physic/PhysicMgr.h"
 #include "Entity/Entity.h"
 #include "IA/Brain.h"
+#include "Manager/Sound/SoundMgr.h"
 
 LevelMgr* LevelMgr::s_singleton = NULL;
 
@@ -53,12 +54,14 @@ void LevelMgr::process(const float dt)
 			{
 				auto levelSize = m_level->getGridSize();
 				m_playerScore -= 10 * levelSize * levelSize;
+				SoundMgr::getSingleton()->addSound("Data/Sound/FX/die.ogg");
 				generateGrid(levelSize);
 			}
 			if (cHandler->isExit())
 			{
 				auto levelSize = m_level->getGridSize();
 				m_playerScore += 10 * levelSize * levelSize;
+				SoundMgr::getSingleton()->addSound("Data/Sound/FX/portal.ogg");
 				generateGrid(levelSize + 1);
 			}
 		}
